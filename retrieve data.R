@@ -64,7 +64,8 @@ write.csv(df, file="sturgeon_WaterColumn_data.csv", na = "", quote = TRUE, row.n
 rm(list=setdiff(ls(), c('newdata')))
 
 df<-newdata %>%
-  filter(SAMPLE_DATE>'2018-01-01',
+  filter(LOCATION_PWL_ID == "1306-0037",
+         SAMPLE_DATE>'2018-01-01',
          SAMPLE_TYPE=="WATER COLUMN",
          INFORMATION_TYPE=="DP") %>%
   mutate(combined=paste(CHARACTERISTIC_NAME,
