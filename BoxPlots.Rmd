@@ -1,0 +1,38 @@
+---
+title: "facet wrap"
+author: "Sabrina Xie"
+date: "Last compiled `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/OneDrive - New York State Office of Information Technology Services/Rscripts/Wallkill/")
+library(tidyverse)
+```
+
+## R Markdown
+
+```{r, results='asis', message=FALSE, warning=FALSE, fig.show="hold", out.width="50%"}
+
+df <- read.csv("sturgeon_WaterColumn_data.csv")
+df1 <- df %>% 
+  pivot_longer(names(df)[3:19]) %>% 
+  filter(!is.na(value),
+         name %in% c("DEPTH..SECCHI.DISK.DEPTH_SD_NA")) %>% 
+  distinct()
+df2 <- df %>% 
+  pivot_longer(names(df)[3:19]) %>% 
+  filter(!is.na(value),
+         name %in% c("TRUE.COLOR_OW_TOTAL")) %>% 
+  distinct()
+
+plot(ggplot(df1,aes(x=name,y=value))+
+       geom_boxplot()+
+       theme(axis.text.x = NULL))
+plot(ggplot(df2,aes(x=name,y=value))+
+       geom_boxplot()+
+       theme(axis.text.x = NULL))
+
+```
+

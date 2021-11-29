@@ -48,7 +48,9 @@ df<-newdata %>%
   
 df<-df %>% 
   # pivot wide
-  spread(chemical_name,result_value,fill = NA)
+  pivot_wider(names_from=chemical_name,
+              values_from=result_value,
+              fill = NA)
 
 df <- df %>% 
   # create total nitrogen
