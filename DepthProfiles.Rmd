@@ -1,0 +1,37 @@
+---
+title: "depth profiles"
+author: "Sabrina Xie"
+date: "Last compiled `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/OneDrive - New York State Office of Information Technology Services/Rscripts/Wallkill/")
+library(tidyverse)
+```
+
+## R Markdown
+
+```{r}
+df <- read.csv("sturgeon_DepthProfile_data.csv")
+
+params<-names(df)
+nparams<-length(params)
+
+for(i in 4:nparams){
+  temp<-df %>% 
+    select(profile_depth,SAMPLE_DATE,params[i])
+  temp$result <- as.numeric(temp[,3])
+  temp<-temp %>% 
+    select(profile_depth,SAMPLE_DATE,result) %>% 
+    filter(!is.na(result)) %>% 
+    distinct()
+  plot(ggplot(temp,aes(y=profile_depth,x=result,colour=SAMPLE_DATE))+
+         geom_path()+
+         scale_y_reverse()+
+         ggtitle(params[i]))
+  rm(temp)
+}
+
+```
