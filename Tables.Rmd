@@ -1,0 +1,89 @@
+---
+title: "section2"
+author: "Sabrina Xie"
+date: "Last compiled `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(psych)
+library(data.table)
+library(huxtable)
+
+setwd("~/OneDrive - New York State Office of Information Technology Services/Rscripts/Wallkill/")
+
+```
+
+## R Markdown
+
+
+```{r measurements}
+df <- read.csv("sturgeon_WaterColumn_data_LONG.csv")
+units <- df %>% 
+  select(chemical_name,unit) %>% 
+  distinct()
+
+wide <- df %>% 
+  select(-c(unit))
+wide <- pivot_wider(wide,names_from=c(chemical_name,strata),values_from=result_value,names_sep="_")
+
+measurements.summary <- describe(wide)
+setDT(measurements.summary, keep.rownames = "param")
+
+measurements.summary <- measurements.summary %>% 
+  select(param,n,mean,sd,median,min,max) %>% 
+  mutate(strata=case_when(
+      grepl("BS",measurements.summary$param,fixed=TRUE) == TRUE ~ "BS",
+      grepl("OW",measurements.summary$param,fixed=TRUE) == TRUE ~ "OW",
+      TRUE ~ "SD")) %>% 
+  filter(param != c("LAKE_ID*","SAMPLE_DATE*")) %>% 
+  arrange(param)
+measurements.summary$param <- substr(measurements.summary$param,1,nchar(measurements.summary$param)-3)
+
+measurements.summary <- left_join(measurements.summary,units,by=c("param" = "chemical_name"))
+measurements.summary <- measurements.summary[,c(1,8,9,2,3,5,4,7,6)]
+
+measurements.summary$param <- tolower(measurements.summary$param)
+measurements.summary$param <- sub("_[^_]+$", "", measurements.summary$param)
+
+Caps <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+        sep="", collapse=" ")
+}
+
+measurements.summary$param <- sapply(measurements.summary$param, Caps)
+
+measurements_ht <- as_hux(measurements.summary)
+theme_grey(measurements_ht)
+
+write.csv(measurements.summary, file="sturgeon_Measurements_table.csv", na = "", quote = TRUE, row.names = FALSE)
+
+```
+
+```{r in situ}
+rm(list = ls())
+df <- read.csv("sturgeon_DepthProfile_data.csv") %>% 
+  select(-c(LAKE_ID)) %>% 
+  distinct() %>% 
+  arrange(profile_depth) %>% 
+  arrange(SAMPLE_DATE)
+
+depth_ht <- as_hux(df) 
+
+list_of_depth <- split_across(depth_ht,c(34,97,110,225,338,438,514))
+  
+theme_grey(list_of_depth[[1]])
+theme_grey(list_of_depth[[2]])
+theme_grey(list_of_depth[[3]])
+theme_grey(list_of_depth[[4]])
+theme_grey(list_of_depth[[5]])
+theme_grey(list_of_depth[[6]])
+theme_grey(list_of_depth[[7]])
+theme_grey(list_of_depth[[8]])
+
+write.csv(df, file="sturgeon_InSitu_table.csv", na = "", quote = TRUE, row.names = FALSE)
+
+```
