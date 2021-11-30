@@ -8,56 +8,47 @@ rm(list=setdiff(ls(), c('newdata')))
 ################water column#################
 df<-newdata %>%
   filter(LOCATION_PWL_ID == "1306-0037",
-         SAMPLE_DATE>'2018-01-01'
+         SAMPLE_DATE>'2018-01-01',
+         SAMPLE_TYPE == "WATER COLUMN",
+         INFORMATION_TYPE %in% c("OW","SD","BS")
          ) %>%
   mutate(combined=paste(CHARACTERISTIC_NAME,
-                        INFORMATION_TYPE,
                         RSLT_RESULT_SAMPLE_FRACTION,
                         sep = "_"))  %>%
   select(LAKE_HISTORY_ID,
          SAMPLE_DATE,
          combined,
+         INFORMATION_TYPE,
          RSLT_RESULT_VALUE,
+         RSLT_RESULT_UNIT,
          RSLT_LABORATORY_QUALIFIER,
          RSLT_VALIDATOR_QUALIFIER) %>%
   mutate(RSLT_RESULT_VALUE=ifelse(!is.na(RSLT_LABORATORY_QUALIFIER)&(RSLT_LABORATORY_QUALIFIER=="U"|RSLT_LABORATORY_QUALIFIER=="UE"),"0",RSLT_RESULT_VALUE),
          RSLT_RESULT_VALUE=as.numeric(RSLT_RESULT_VALUE)) %>%
   filter(!is.na(RSLT_RESULT_VALUE),
-         is.na(RSLT_VALIDATOR_QUALIFIER)|(RSLT_VALIDATOR_QUALIFIER!="R"),
-         combined %in% c('CHLOROPHYLL A_OW_TOTAL',
-                         "CHLOROPHYLL A_BS_TOTAL",
-                         'PHOSPHORUS, TOTAL_OW_TOTAL',
-                         'PHOSPHORUS, TOTAL_BS_TOTAL',
-                         "NITROGEN, NITRATE-NITRITE_OW_TOTAL",
-                         "NITROGEN, NITRATE-NITRITE_BS_TOTAL",
-                         "NITROGEN, KJELDAHL, TOTAL_OW_TOTAL",
-                         "NITROGEN, KJELDAHL, TOTAL_BS_TOTAL",
-                         "NITROGEN, AMMONIA (AS N)_OW_TOTAL",
-                         "NITROGEN, AMMONIA (AS N)_BS_TOTAL",
-                         "CHLORIDE_OW_TOTAL",
-                         "CHLORIDE_BS_TOTAL",
-                         "IRON_OW_TOTAL",
-                         "IRON_BS_TOTAL",
-                         "DEPTH, SECCHI DISK DEPTH_SD_NA",
-                         "TRUE COLOR_OW_TOTAL")) %>%
-  select(LAKE_HISTORY_ID,SAMPLE_DATE,combined,RSLT_RESULT_VALUE) %>%
-  distinct(LAKE_HISTORY_ID,SAMPLE_DATE,combined,RSLT_RESULT_VALUE,.keep_all = TRUE) %>%
+         is.na(RSLT_VALIDATOR_QUALIFIER)|(RSLT_VALIDATOR_QUALIFIER!="R")) %>%
+  select(LAKE_HISTORY_ID,SAMPLE_DATE,combined,INFORMATION_TYPE,RSLT_RESULT_VALUE,RSLT_RESULT_UNIT) %>%
+  distinct(LAKE_HISTORY_ID,SAMPLE_DATE,combined,INFORMATION_TYPE,RSLT_RESULT_VALUE,.keep_all = TRUE) %>%
   rename(LAKE_ID=LAKE_HISTORY_ID,
          chemical_name=combined,
-         result_value=RSLT_RESULT_VALUE)
+         strata=INFORMATION_TYPE,
+         result_value=RSLT_RESULT_VALUE,
+         unit=RSLT_RESULT_UNIT)
+
+write.csv(df, file="sturgeon_WaterColumn_data_LONG.csv", na = "", quote = TRUE, row.names = FALSE)
   
 df<-df %>% 
+  select(LAKE_ID,SAMPLE_DATE,chemical_name,strata,result_value) %>% 
   # pivot wide
-  pivot_wider(names_from=chemical_name,
-              values_from=result_value,
-              fill = NA)
+  pivot_wider(names_from=c(chemical_name,strata),
+              values_from=result_value)
 
 df <- df %>% 
   # create total nitrogen
-  mutate(`NITROGEN, OW_TOTAL`=`NITROGEN, NITRATE-NITRITE_OW_TOTAL`+`NITROGEN, KJELDAHL, TOTAL_OW_TOTAL`,
-         `NITROGEN, BS_TOTAL`=`NITROGEN, NITRATE-NITRITE_BS_TOTAL`+`NITROGEN, KJELDAHL, TOTAL_BS_TOTAL`)
+  mutate(`NITROGEN, TOTAL_OW`=`NITROGEN, NITRATE-NITRITE_TOTAL_OW`+`NITROGEN, KJELDAHL, TOTAL_TOTAL_OW`,
+         `NITROGEN, TOTAL_BS`=`NITROGEN, NITRATE-NITRITE_TOTAL_BS`+`NITROGEN, KJELDAHL, TOTAL_TOTAL_BS`)
 
-write.csv(df, file="sturgeon_WaterColumn_data.csv", na = "", quote = TRUE, row.names = FALSE)
+write.csv(df, file="sturgeon_WaterColumn_data_WIDE.csv", na = "", quote = TRUE, row.names = FALSE)
 
 
 
