@@ -7,15 +7,15 @@ rm(list=setdiff(ls(), c('newdata')))
 
 ################water column#################
 df<-newdata %>%
-  filter(LOCATION_PWL_ID == "1306-0037",
+  filter(LOCATION_PWL_ID == "1306-0037", #filter to sturgeon pool, since 2018, water column data
          SAMPLE_DATE>'2018-01-01',
          SAMPLE_TYPE == "WATER COLUMN",
          INFORMATION_TYPE %in% c("OW","SD","BS")
          ) %>%
-  mutate(combined=paste(CHARACTERISTIC_NAME,
+  mutate(combined=paste(CHARACTERISTIC_NAME, #create parameter name
                         RSLT_RESULT_SAMPLE_FRACTION,
                         sep = "_"))  %>%
-  select(LAKE_HISTORY_ID,
+  select(LAKE_HISTORY_ID, #keep relevant columns
          SAMPLE_DATE,
          combined,
          INFORMATION_TYPE,
@@ -24,9 +24,9 @@ df<-newdata %>%
          RSLT_LABORATORY_QUALIFIER,
          RSLT_VALIDATOR_QUALIFIER) %>%
   mutate(RSLT_RESULT_VALUE=ifelse(!is.na(RSLT_LABORATORY_QUALIFIER)&(RSLT_LABORATORY_QUALIFIER=="U"|RSLT_LABORATORY_QUALIFIER=="UE"),"0",RSLT_RESULT_VALUE),
-         RSLT_RESULT_VALUE=as.numeric(RSLT_RESULT_VALUE)) %>%
+         RSLT_RESULT_VALUE=as.numeric(RSLT_RESULT_VALUE)) %>% 
   filter(!is.na(RSLT_RESULT_VALUE),
-         is.na(RSLT_VALIDATOR_QUALIFIER)|(RSLT_VALIDATOR_QUALIFIER!="R")) %>%
+         is.na(RSLT_VALIDATOR_QUALIFIER)|(RSLT_VALIDATOR_QUALIFIER!="R")) %>% #remove NAs, non-detects, invalid results
   select(LAKE_HISTORY_ID,SAMPLE_DATE,combined,INFORMATION_TYPE,RSLT_RESULT_VALUE,RSLT_RESULT_UNIT) %>%
   distinct(LAKE_HISTORY_ID,SAMPLE_DATE,combined,INFORMATION_TYPE,RSLT_RESULT_VALUE,.keep_all = TRUE) %>%
   rename(LAKE_ID=LAKE_HISTORY_ID,
@@ -57,7 +57,7 @@ write.csv(df, file="sturgeon_WaterColumn_data_WIDE.csv", na = "", quote = TRUE, 
 rm(list=setdiff(ls(), c('newdata')))
 
 df<-newdata %>%
-  filter(LOCATION_PWL_ID == "1306-0037",
+  filter(LOCATION_PWL_ID == "1306-0037", #filter to sturgeon pool since 2018, depth profiles
          SAMPLE_DATE>'2018-01-01',
          SAMPLE_TYPE=="WATER COLUMN",
          INFORMATION_TYPE=="DP") %>%

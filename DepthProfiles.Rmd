@@ -14,20 +14,20 @@ library(tidyverse)
 ## R Markdown
 
 ```{r}
-df <- read.csv("sturgeon_DepthProfile_data.csv")
+df <- read.csv("sturgeon_DepthProfile_data.csv") #load in data
 
-params<-names(df)
-nparams<-length(params)
+params<-names(df) #extract parameters 
+nparams<-length(params) #number for loop
 
 for(i in 4:nparams){
   temp<-df %>% 
-    select(profile_depth,SAMPLE_DATE,params[i])
-  temp$result <- as.numeric(temp[,3])
+    select(profile_depth,SAMPLE_DATE,params[i]) #create loop dataframe
+  temp$result <- as.numeric(temp[,3]) #format as numeric
   temp<-temp %>% 
-    select(profile_depth,SAMPLE_DATE,result) %>% 
-    filter(!is.na(result)) %>% 
+    select(profile_depth,SAMPLE_DATE,result) %>% #keep relevant columns
+    filter(!is.na(result)) %>% #remove NAs
     distinct()
-  plot(ggplot(temp,aes(y=profile_depth,x=result,colour=SAMPLE_DATE))+
+  plot(ggplot(temp,aes(y=profile_depth,x=result,colour=SAMPLE_DATE))+ #plot grouped by sample date
          geom_path()+
          scale_y_reverse()+
          ggtitle(params[i]))

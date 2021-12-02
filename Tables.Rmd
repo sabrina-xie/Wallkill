@@ -20,39 +20,39 @@ setwd("~/OneDrive - New York State Office of Information Technology Services/Rsc
 
 
 ```{r measurements}
-df <- read.csv("sturgeon_WaterColumn_data_LONG.csv")
-units <- df %>% 
+df <- read.csv("sturgeon_WaterColumn_data_LONG.csv") #read in data
+units <- df %>% #create unit dataframe
   select(chemical_name,unit) %>% 
   distinct()
 
-wide <- df %>% 
+wide <- df %>%
   select(-c(unit))
-wide <- pivot_wider(wide,names_from=c(chemical_name,strata),values_from=result_value,names_sep="_")
+wide <- pivot_wider(wide,names_from=c(chemical_name,strata),values_from=result_value,names_sep="_") #reformat data so it is easier to summarize
 
-measurements.summary <- describe(wide)
-setDT(measurements.summary, keep.rownames = "param")
+measurements.summary <- describe(wide) #create summary
+setDT(measurements.summary, keep.rownames = "param") #put row names in a column
 
 measurements.summary <- measurements.summary %>% 
   select(param,n,mean,sd,median,min,max) %>% 
-  mutate(strata=case_when(
+  mutate(strata=case_when( #create strata column to distinguish between top and bottom samples
       grepl("BS",measurements.summary$param,fixed=TRUE) == TRUE ~ "BS",
       grepl("OW",measurements.summary$param,fixed=TRUE) == TRUE ~ "OW",
       TRUE ~ "SD")) %>% 
   filter(param != c("LAKE_ID*","SAMPLE_DATE*")) %>% 
   arrange(param)
-measurements.summary$param <- substr(measurements.summary$param,1,nchar(measurements.summary$param)-3)
+measurements.summary$param <- substr(measurements.summary$param,1,nchar(measurements.summary$param)-3) #clean up parameter names
 
-measurements.summary <- left_join(measurements.summary,units,by=c("param" = "chemical_name"))
-measurements.summary <- measurements.summary[,c(1,8,9,2,3,5,4,7,6)]
+measurements.summary <- left_join(measurements.summary,units,by=c("param" = "chemical_name")) #attach units
+measurements.summary <- measurements.summary[,c(1,8,9,2,3,5,4,7,6)] #reorder columns
 
-measurements.summary$param <- tolower(measurements.summary$param)
+measurements.summary$param <- tolower(measurements.summary$param) #clean up parameter names
 measurements.summary$param <- sub("_[^_]+$", "", measurements.summary$param)
 
 Caps <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
         sep="", collapse=" ")
-}
+} #capitalize first letter of each word
 
 measurements.summary$param <- sapply(measurements.summary$param, Caps)
 
@@ -65,7 +65,8 @@ write.csv(measurements.summary, file="sturgeon_Measurements_table.csv", na = "",
 
 ```{r in situ}
 rm(list = ls())
-df <- read.csv("sturgeon_DepthProfile_data.csv") %>% 
+
+df <- read.csv("sturgeon_DepthProfile_data.csv") %>% #load in data and group each profile
   select(-c(LAKE_ID)) %>% 
   distinct() %>% 
   arrange(profile_depth) %>% 
@@ -73,7 +74,7 @@ df <- read.csv("sturgeon_DepthProfile_data.csv") %>%
 
 depth_ht <- as_hux(df) 
 
-list_of_depth <- split_across(depth_ht,c(34,97,110,225,338,438,514))
+list_of_depth <- split_across(depth_ht,c(34,97,110,225,338,438,514)) #split by sampling event
   
 theme_grey(list_of_depth[[1]])
 theme_grey(list_of_depth[[2]])

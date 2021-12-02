@@ -15,17 +15,17 @@ library(tidyverse)
 
 ```{r, results='asis', message=FALSE, warning=FALSE, fig.show="hold", out.width="50%"}
 
-df <- read.csv("sturgeon_WaterColumn_data_LONG.csv")
+df <- read.csv("sturgeon_WaterColumn_data_LONG.csv") #load in data
 df1 <- df %>% 
   filter(!is.na(result_value),
-         chemical_name %in% c("DEPTH, SECCHI DISK DEPTH_NA")) %>% 
+         chemical_name %in% c("DEPTH, SECCHI DISK DEPTH_NA")) %>% #filter to relevant paramenter
   distinct()
 df2 <- df %>% 
   filter(!is.na(result_value),
          chemical_name %in% c("TRUE COLOR_TOTAL")) %>% 
   distinct()
 
-plot(ggplot(df1,aes(x=chemical_name,y=result_value))+
+plot(ggplot(df1,aes(x=chemical_name,y=result_value))+ #boxplot
        geom_boxplot()+
        theme(axis.text.x = NULL))
 plot(ggplot(df2,aes(x=chemical_name,y=result_value))+
